@@ -22,6 +22,5 @@ class BayesianNet(nn.Module):
         x = self.blinear2(x)
         x = F.selu(x)
         x = self.blinear3(x)
-        x = F.selu(x)
+        x = F.sigmoid(x)
         return(x)
-
