@@ -17,42 +17,51 @@ device = (
 )
 
 
-
+# create train & test data
 training_dataset = MNISTDataset('C:/mnist/train-images-idx3-ubyte.gz', 'C:/mnist/train-labels-idx1-ubyte.gz')
 test_dataset = MNISTDataset('C:/mnist/t10k-images-idx3-ubyte.gz', 'C:/mnist/t10k-labels-idx1-ubyte.gz')
 
+
+# train & test parameters
 training_batch_size = 50
 test_batch_size = 1000
 
-num_samples = 5
+num_epochs = 1
 
+learning_rate = .2
+momentum = .9
+
+
+# load train & test data
 training_loader = torch.utils.data.DataLoader(training_dataset, batch_size = training_batch_size, shuffle = True)
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = test_batch_size, shuffle = True)
 
-num_epochs = 1
-
+# instantiate neural net
 neural_net = BayesianNet().to(device)
 
+# storage
 train_losses = []
 train_counter = []
 test_accuracy = []
 test_losses= []
 
+# track testing (over all images & epochs)
 test_counter = [num * training_dataset.num_images for num in range(num_epochs + 1)]
 
+# loss function & optimizer
 loss_function = nn.CrossEntropyLoss()
-
-learning_rate = .2
-momentum = .9
-
 optimizer = torch.optim.SGD(neural_net.parameters(), lr = learning_rate, momentum = momentum)
 
+# seed for recreating data
 random_seed = 1
 torch.backends.cudnn.enabled = False
 torch.manual_seed(random_seed)
 
 
 
+
+
+# train & test function
 
 def train(epoch):
 
@@ -73,7 +82,6 @@ def train(epoch):
                     100 * batch_idx / len(training_loader), loss.item()))
             train_losses.append(loss.item())
             train_counter.append((batch_idx * training_batch_size) + ((epoch - 1) * len(training_dataset)))
-
 
 
 def test():
@@ -104,52 +112,8 @@ def test():
                 100. * current_accuracy))
 
         
-    return
-        
-
-        
-
-
-
-def sampling(image_idx):
-
-    #predictions
-    confidences = np.array([])
-    predictions = np.array([])
-
-
-    image, label = test_dataset.__getitem__(image_idx)
-    #label.item()
-    
-    with torch.no_grad(): #temp. sets requires_grad=False --> no calc. of gradients; faster
-
-        for _ in range(num_samples):
-            
-            output = neural_net(image)
-
-            # confidence and prediction value (0-9) for sample
-            conf_sample, pred_sample = torch.max(output, dim=0)
-
-            confidences = np.append(confidences, conf_sample.tolist())
-            predictions = np.append(predictions, pred_sample.tolist())
-
-    #pick predictions matching label
-    mask = (predictions == label.item())
-
-    #confidences of correct predictions
-    conf_corr = confidences[mask]
-
-    #mean & std of confidences
-    conf_mean = np.mean(conf_corr)
-    conf_std = np.std(conf_corr)
-
-    print('\nSampling:')
-    print('Confidences in prediction: Mean: {:.2f}%  Std: {:.2e}%  Accuracy: {}/{}\n'.format(
-            conf_mean*100, conf_std*100, len(conf_corr), num_samples))
 
     
-
-
 
 
 
@@ -157,25 +121,29 @@ def sampling(image_idx):
 
 if __name__ == "__main__":
 
+    # main loop (training & testing)
     test()
-
     for epoch in range(1, num_epochs + 1):
         train(epoch)
         test()
 
-
-    sampling(0)
-
     print('\nTotal epochs: {}'.format(num_epochs))
     print('Max Accuracy is: {}%'.format(round(100*max(test_accuracy), 2)))
 
-    # fig = plt.figure()
-    # plt.plot(train_counter, train_losses, color = 'blue', zorder = 1)
-    # plt.scatter(test_counter, test_losses, color = 'red', zorder = 2)
-    # plt.scatter(test_counter, test_accuracy, color = 'green', marker = '+', zorder = 3)
-    # plt.legend(['Train Loss', 'Test Loss', 'Accuracy'], loc = 'upper right')
-    # plt.xlabel('number of training examples seen')
-    # plt.ylabel('negative log likelihood loss')
-    # fig
-    # plt.show()
-    
+
+    # save trained model
+    torch.save({'model_state_dict':neural_net.state_dict(),
+                'num_epochs': num_epochs},
+                'bayesianNN.pth')
+
+
+    # plot losses & accuracy
+    fig = plt.figure()
+    plt.plot(train_counter, train_losses, color = 'blue', zorder = 1)
+    plt.scatter(test_counter, test_losses, color = 'red', zorder = 2)
+    plt.scatter(test_counter, test_accuracy, color = 'green', marker = '+', zorder = 3)
+    plt.legend(['Train Loss', 'Test Loss', 'Accuracy'], loc = 'upper right')
+    plt.xlabel('number of training examples seen')
+    plt.ylabel('negative log likelihood loss')
+    #fig
+    plt.show()
