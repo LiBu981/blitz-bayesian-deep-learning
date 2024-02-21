@@ -13,17 +13,32 @@ device = (
     else "cpu"
 )
 
+# create test data
 test_dataset = MNISTDataset('C:/mnist/t10k-images-idx3-ubyte.gz', 'C:/mnist/t10k-labels-idx1-ubyte.gz')
 
+# instantiate neural net
 neural_net = BayesianNet().to(device)
 
+# load saved net & training parameters
 saved_model = torch.load('bayesianNN.pth')
 neural_net.load_state_dict(saved_model['model_state_dict'])
+
+training_batch_size = saved_model['training_batch_size']
 num_epochs = saved_model['num_epochs']
+learning_rate = saved_model['learning_rate']
+momentum = saved_model['momentum']
 
 
-#number of samples / image
-num_samples = 5
+# number of samples / image
+num_samples = 20
+
+
+# Sampling
+numb_value = 0 #0-9
+
+# storage
+conf_mean_all = []
+conf_std_all = []
 
 
 def sampling(image_idx):
@@ -60,12 +75,10 @@ def sampling(image_idx):
     return conf_mean, conf_std
 
 
+# counter for labels matching number value (0-9)
+label_match = 0
 
-#Sampling
-numb_value = 0 #0-9
-
-conf_mean_all = []
-conf_std_all = []
+print('searching for images with label = {} in test data'.format(numb_value))
 
 for image_idx in range(len(test_dataset)):
 
@@ -75,6 +88,12 @@ for image_idx in range(len(test_dataset)):
         conf_mean, conf_std = sampling(image_idx)
         conf_mean_all.append(conf_mean)
         conf_std_all.append(conf_std)
+
+        label_match += 1
+    
+    if image_idx % 500 == 0:
+        print('images scanned: {}/{} ({:.0f}%); images with label={}: {}'.format(
+            image_idx, len(test_dataset), image_idx/len(test_dataset)*100, numb_value, label_match))
 
 
 # plotting confindence (mean & std) in subplots
@@ -88,7 +107,12 @@ plt.subplot(2,1,2)
 plt.hist(conf_std_all,bins=100)
 plt.xlabel('std of confidence in prediction ({} samples / image)'.format(num_samples))
 plt.ylabel('total number of occurences')
-fig.suptitle('label: {}, number of epochs: {}'.format(numb_value, num_epochs))
+
+fig.suptitle('label: {}'.format(numb_value), fontsize=15)
+fig.text(0.5, 0.95, 'batch size: {}, number of epochs: {}, learning rate: {}, momentum: {}'.format(
+        training_batch_size, num_epochs, learning_rate, momentum),
+        ha='center', va='top', fontsize=10)
+
 plt.show()
 
 
