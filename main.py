@@ -26,9 +26,9 @@ test_dataset = MNISTDataset('C:/mnist/t10k-images-idx3-ubyte.gz', 'C:/mnist/t10k
 training_batch_size = 50
 test_batch_size = 1000
 
-num_epochs = 1
+num_epochs = 25
 
-learning_rate = .2
+learning_rate = .05
 momentum = .9
 
 
@@ -133,7 +133,11 @@ if __name__ == "__main__":
 
     # save trained model
     torch.save({'model_state_dict':neural_net.state_dict(),
-                'num_epochs': num_epochs},
+                'num_epochs': num_epochs,
+                'training_batch_size': training_batch_size,
+                'learning_rate': learning_rate,
+                'momentum': momentum
+                },
                 'bayesianNN.pth')
 
 
