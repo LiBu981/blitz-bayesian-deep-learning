@@ -5,6 +5,8 @@ import torch.optim as optim
 import torchvision.datasets as dsets
 import torchvision.transforms as transforms
 
+import blitz
+
 from blitz.modules import BayesianLinear, BayesianConv2d
 from blitz.losses import kl_divergence_from_nn
 from blitz.utils import variational_estimator
