@@ -18,10 +18,10 @@ class BayesianNet(nn.Module):
     
     def forward(self, x):
         x = self.blinear1(x)
-        x = F.sigmoid(x)
+        x = F.selu(x)
         x = self.blinear2(x)
-        x = F.sigmoid(x)
+        x = F.selu(x)
         x = self.blinear3(x)
-        x = F.sigmoid(x)
+        x = F.selu(x)
         return(x)
 
