@@ -99,12 +99,12 @@ for image_idx in range(len(test_dataset)):
 # plotting confindence (mean & std) in subplots
 fig = plt.figure()
 plt.subplot(2,1,1)
-plt.hist(conf_mean_all,bins=100)
+plt.hist(conf_mean_all,bins=np.linspace(0.9,1,100))
 plt.xlabel('mean of confidences in prediction ({} samples / image)'.format(num_samples))
 plt.ylabel('total number of occurences')
 
 plt.subplot(2,1,2)
-plt.hist(conf_std_all,bins=100)
+plt.hist(conf_std_all,bins=np.linspace(0.9,1,100))
 plt.xlabel('std of confidence in prediction ({} samples / image)'.format(num_samples))
 plt.ylabel('total number of occurences')
 
